@@ -33,142 +33,150 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.importCsv = exports.createLead = void 0;
-const https_1 = require("firebase-functions/v2/https");
-const options_1 = require("firebase-functions/v2/options");
+exports.r = exports.importCsv = exports.createLead = void 0;
 const admin = __importStar(require("firebase-admin"));
-const zod_1 = require("zod");
+const https_1 = require("firebase-functions/v2/https");
+const logger = __importStar(require("firebase-functions/logger"));
 const sync_1 = require("csv-parse/sync");
-// Initialize Admin SDK once
-if (!admin.apps.length) {
+const zod_1 = require("zod");
+if (!admin.apps.length)
     admin.initializeApp();
+const db = admin.firestore();
+// ---------- Types ----------
+const LeadZ = zod_1.z.object({
+    email: zod_1.z.string().email().optional(),
+    contactName: zod_1.z.string().trim().optional(),
+    phone: zod_1.z.string().trim().optional(),
+    company: zod_1.z.string().trim().optional(),
+    role: zod_1.z.string().trim().optional(),
+    website: zod_1.z.string().trim().optional(),
+    industry: zod_1.z.string().trim().optional(),
+    source: zod_1.z.string().trim().optional(),
+    tags: zod_1.z.array(zod_1.z.string()).optional().default([]),
+});
+function dedupeKey(l) {
+    if (l.email && l.email.trim())
+        return `e:${l.email.toLowerCase()}`;
+    const n = (l.contactName ?? "").toLowerCase().replace(/\s+/g, "");
+    const c = (l.company ?? "").toLowerCase().replace(/\s+/g, "");
+    return `n:${n}|c:${c}`;
 }
-const firestore = admin.firestore();
-// Enforce App Check on all HTTPS functions and set region
-(0, options_1.setGlobalOptions)({
-    region: "us-central1",
-    enforceAppCheck: true,
-    maxInstances: 10,
-});
-// Schemas
-const leadSchema = zod_1.z.object({
-    email: zod_1.z.string().email(),
-    name: zod_1.z.string().min(1).max(200),
-    company: zod_1.z.string().min(1).max(200).optional().default(""),
-    phone: zod_1.z.string().max(100).optional().default(""),
-});
-const importSchema = zod_1.z.object({
-    csvText: zod_1.z.string().min(1),
-    mapping: zod_1.z.object({
-        email: zod_1.z.string(), // column name for email
-        name: zod_1.z.string().optional(),
-        company: zod_1.z.string().optional(),
-        phone: zod_1.z.string().optional(),
-    }),
-    delimiter: zod_1.z.string().length(1).optional(), // optional custom delimiter
-});
+// ---------- 1) Create/Upsert Lead ----------
 exports.createLead = (0, https_1.onRequest)({ cors: true, timeoutSeconds: 30 }, async (req, res) => {
-    try {
-        if (req.method !== "POST") {
-            res.status(405).send("Method Not Allowed");
-            return;
-        }
-        const parsed = leadSchema.safeParse(req.body);
-        if (!parsed.success) {
-            res.status(400).json({ error: parsed.error.flatten() });
-            return;
-        }
-        const lead = parsed.data;
-        const emailKey = lead.email.toLowerCase().trim();
-        const now = admin.firestore.FieldValue.serverTimestamp();
-        await firestore
-            .collection("leads")
-            .doc(emailKey)
-            .set({
-            email: emailKey,
-            name: lead.name,
-            company: lead.company ?? "",
-            phone: lead.phone ?? "",
-            updatedAt: now,
-            createdAt: now,
-        }, { merge: true });
-        res.status(200).json({ ok: true });
+    if (req.method !== "POST") {
+        res.status(405).json({ error: "POST only" });
+        return;
     }
-    catch (err) {
-        console.error("createLead error", err);
-        res.status(500).json({ error: "Internal Server Error" });
+    try {
+        const orgId = req.query.orgId || "default";
+        const lead = LeadZ.parse(req.body?.lead ?? {});
+        const key = dedupeKey(lead);
+        const col = db.collection("leads");
+        const existing = await col.where("orgId", "==", orgId).where("dedupe", "==", key).limit(1).get();
+        if (!existing.empty) {
+            const doc = existing.docs[0];
+            await doc.ref.set({ ...lead, orgId, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            res.json({ inserted: 0, updated: 1, id: doc.id });
+            return;
+        }
+        const doc = await col.add({
+            ...lead,
+            orgId,
+            dedupe: key,
+            score: 0,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        res.json({ inserted: 1, updated: 0, id: doc.id });
+    }
+    catch (e) {
+        logger.error(e);
+        res.status(400).json({ error: e.message ?? "invalid payload" });
     }
 });
-exports.importCsv = (0, https_1.onRequest)({ cors: true, timeoutSeconds: 120 }, async (req, res) => {
-    try {
-        if (req.method !== "POST") {
-            res.status(405).send("Method Not Allowed");
-            return;
-        }
-        const parsed = importSchema.safeParse(req.body);
-        if (!parsed.success) {
-            res.status(400).json({ error: parsed.error.flatten() });
-            return;
-        }
-        const { csvText, mapping, delimiter } = parsed.data;
-        // Parse CSV
-        const records = (0, sync_1.parse)(csvText, {
-            columns: true,
-            skip_empty_lines: true,
-            bom: true,
-            delimiter: delimiter ?? undefined,
-            trim: true,
-        });
-        // Simple request rate limiting guard: hard cap rows per request
-        const MAX_ROWS = 1000;
-        if (records.length > MAX_ROWS) {
-            res.status(429).json({ error: `Too many rows (>${MAX_ROWS}).` });
-            return;
-        }
-        // Map records to leads and dedupe by email
-        const emailColumn = mapping.email;
-        const nameColumn = mapping.name ?? "name";
-        const companyColumn = mapping.company ?? "company";
-        const phoneColumn = mapping.phone ?? "phone";
-        const emailToLead = new Map();
-        for (const row of records) {
-            const emailRaw = (row[emailColumn] ?? "").toString().trim().toLowerCase();
-            if (!emailRaw)
-                continue;
-            const lead = {
-                email: emailRaw,
-                name: (row[nameColumn] ?? "").toString().trim(),
-                company: (row[companyColumn] ?? "").toString().trim(),
-                phone: (row[phoneColumn] ?? "").toString().trim(),
-            };
-            // Validate each lead (only email strictly required)
-            const valid = leadSchema.pick({ email: true }).safeParse({ email: lead.email });
-            if (!valid.success)
-                continue;
-            emailToLead.set(emailRaw, lead); // dedupe by email
-        }
-        if (emailToLead.size === 0) {
-            res.status(400).json({ error: "No valid rows with email found." });
-            return;
-        }
-        // Batch write using BulkWriter for performance
-        const writer = firestore.bulkWriter();
-        const now = admin.firestore.FieldValue.serverTimestamp();
-        for (const [email, lead] of emailToLead) {
-            writer.set(firestore.collection("leads").doc(email), {
-                email,
-                name: lead.name,
-                company: lead.company,
-                phone: lead.phone,
-                updatedAt: now,
-                createdAt: now,
-            }, { merge: true });
-        }
-        await writer.close();
-        res.status(200).json({ ok: true, imported: emailToLead.size });
+// ---------- 2) Import CSV ----------
+const ImportZ = zod_1.z.object({
+    orgId: zod_1.z.string().default("default"),
+    csvText: zod_1.z.string(),
+    mapping: zod_1.z.record(zod_1.z.string(), zod_1.z.string()),
+    bulkTags: zod_1.z.array(zod_1.z.string()).optional().default([]),
+    source: zod_1.z.string().optional(),
+});
+exports.importCsv = (0, https_1.onRequest)({ cors: true, timeoutSeconds: 300 }, async (req, res) => {
+    if (req.method !== "POST") {
+        res.status(405).json({ error: "POST only" });
+        return;
     }
-    catch (err) {
-        console.error("importCsv error", err);
-        res.status(500).json({ error: "Internal Server Error" });
+    try {
+        const { orgId, csvText, mapping, bulkTags, source } = ImportZ.parse(req.body);
+        const rows = (0, sync_1.parse)(csvText, { columns: true, skip_empty_lines: true });
+        const leads = rows.map((r) => {
+            const obj = {};
+            for (const [field, header] of Object.entries(mapping))
+                obj[field] = r[header] ?? undefined;
+            if (bulkTags?.length)
+                obj.tags = [...new Set([...(obj.tags ?? []), ...bulkTags])];
+            if (source)
+                obj.source = source;
+            return LeadZ.parse(obj);
+        });
+        const col = db.collection("leads");
+        let inserted = 0, updated = 0, merged = 0;
+        const batch = db.batch();
+        const seen = new Map();
+        for (const l of leads) {
+            const key = dedupeKey(l);
+            if (seen.has(key)) {
+                batch.set(seen.get(key), { ...l, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                merged++;
+                continue;
+            }
+            const existing = await col.where("orgId", "==", orgId).where("dedupe", "==", key).limit(1).get();
+            if (!existing.empty) {
+                const ref = existing.docs[0].ref;
+                batch.set(ref, { ...l, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                updated++;
+                seen.set(key, ref);
+            }
+            else {
+                const ref = col.doc();
+                batch.set(ref, {
+                    ...l, orgId, dedupe: key, score: 0,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                inserted++;
+                seen.set(key, ref);
+            }
+        }
+        await batch.commit();
+        res.json({ inserted, updated, merged, total: leads.length });
+    }
+    catch (e) {
+        logger.error(e);
+        res.status(400).json({ error: e.message ?? "import failed" });
+    }
+});
+// ---------- 3) Shortlink Redirect ----------
+exports.r = (0, https_1.onRequest)({ cors: false, timeoutSeconds: 15 }, async (req, res) => {
+    try {
+        const shortCode = (req.path || req.url || "").split("/").pop();
+        const snap = await db.collection("campaigns").where("shortCode", "==", shortCode).limit(1).get();
+        if (snap.empty) {
+            res.status(404).send("Not found");
+            return;
+        }
+        const doc = snap.docs[0];
+        await doc.ref.set({
+            clicks: admin.firestore.FieldValue.increment(1),
+            lastClickAt: admin.firestore.FieldValue.serverTimestamp(),
+            lastReferrer: req.get("referer") ?? null
+        }, { merge: true });
+        const target = doc.get("targetUrl") || "https://adsell.ai";
+        res.redirect(302, target);
+    }
+    catch (e) {
+        logger.error(e);
+        res.status(500).send("error");
     }
 });
