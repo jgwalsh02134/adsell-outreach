@@ -7,6 +7,7 @@ const initial: Form = { email: "", name: "", company: "", phone: "" };
 export default function NewLead() {
   const [form, setForm] = useState<Form>(initial);
   const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
   const [errors, setErrors] = useState<Partial<Form>>({});
   const set = (k: keyof Form) => (e: any) => setForm({ ...form, [k]: e.target.value });
   const validate = (): boolean => {
@@ -17,10 +18,29 @@ export default function NewLead() {
     setErrors(e); return Object.keys(e).length === 0;
   };
   const submit = async (ev: React.FormEvent) => {
-    ev.preventDefault(); setMsg(null);
+    ev.preventDefault(); setMsg(null); setErr(null);
     if (!validate()) return;
-    console.log("Lead submitted", form);
-    setMsg("Saved locally (wire to backend next)."); setForm(initial);
+    try {
+      const res = await fetch("/api/create-lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orgId: "default",
+          lead: {
+            email: form.email,
+            contactName: form.name,
+            company: form.company,
+            phone: form.phone,
+          },
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Failed to create lead.");
+      setMsg(`Saved! ${data.inserted ? "Inserted" : "Updated"} (id: ${data.id ?? "n/a"}).`);
+      setForm(initial);
+    } catch (e: any) {
+      setErr(e?.message || "Request failed.");
+    }
   };
   return (
     <div className="container py-12">
@@ -52,7 +72,8 @@ export default function NewLead() {
           <button type="submit" className="btn btn-secondary">Save Lead</button>
           <a href="/" className="btn btn-ghost">Cancel</a>
         </div>
-        {msg && <div className="text-sm opacity-80">{msg}</div>}
+        {msg && <div className="text-sm opacity-80 text-emerald-300">{msg}</div>}
+        {err && <div className="text-sm opacity-80 text-red-400">{err}</div>}
       </form>
     </div>
   );}

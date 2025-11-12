@@ -1,28 +1,24 @@
 import { NextResponse } from "next/server";
 
-const FUNCTIONS_BASE_URL = process.env.FUNCTIONS_BASE_URL;
+const BASE = process.env.NEXT_PUBLIC_FUNCTIONS_BASE;
 
 export async function POST(request: Request) {
-  if (!FUNCTIONS_BASE_URL) {
+  if (!BASE) {
     return NextResponse.json(
-      { error: "Missing FUNCTIONS_BASE_URL env var" },
+      { error: "Missing NEXT_PUBLIC_FUNCTIONS_BASE env var" },
       { status: 500 }
     );
   }
   try {
     const body = await request.json();
-    const appCheckToken = request.headers.get("x-firebase-appcheck") || "";
-    const res = await fetch(`${FUNCTIONS_BASE_URL}/importCsv`, {
+    const res = await fetch(`${BASE}/importCsv`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(appCheckToken ? { "X-Firebase-AppCheck": appCheckToken } : {}),
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));
     return NextResponse.json(data, { status: res.status });
-  } catch (err: any) {
+  } catch {
     return NextResponse.json({ error: "Proxy error" }, { status: 500 });
   }
 }
