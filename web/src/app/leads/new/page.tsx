@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getAppCheckToken } from "@/src/lib/firebase";
 
 export default function NewLeadPage() {
   const [form, setForm] = useState({
@@ -9,6 +10,8 @@ export default function NewLeadPage() {
     company: "",
     phone: "",
   });
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [message, setMessage] = useState<string>("");
 
   const onChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -17,15 +20,47 @@ export default function NewLeadPage() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Lead submitted:", form);
-    alert("Lead logged to console.");
+    setStatus("submitting");
+    setMessage("");
+    try {
+      const appCheckToken = await getAppCheckToken();
+      const res = await fetch("/api/create-lead", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(appCheckToken ? { "X-Firebase-AppCheck": appCheckToken } : {}),
+        },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || `Request failed (${res.status})`);
+      }
+      setStatus("success");
+      setMessage("Lead saved successfully.");
+      setForm({ email: "", name: "", company: "", phone: "" });
+    } catch (err: any) {
+      setStatus("error");
+      setMessage(err?.message || "Failed to save lead.");
+    }
   };
 
   return (
     <main className="mx-auto max-w-xl px-6 py-10">
       <h1 className="mb-6 text-3xl font-heading">Add Lead Manually</h1>
+
+      {status === "success" && (
+        <div className="mb-4 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+          {message || "Success."}
+        </div>
+      )}
+      {status === "error" && (
+        <div className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {message || "Something went wrong."}
+        </div>
+      )}
 
       <form
         onSubmit={onSubmit}
@@ -96,14 +131,13 @@ export default function NewLeadPage() {
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full rounded-lg bg-secondary px-6 py-3 font-medium text-white transition hover:brightness-110"
+            disabled={status === "submitting"}
+            className="w-full rounded-lg bg-secondary px-6 py-3 font-medium text-white transition hover:brightness-110 disabled:opacity-60"
           >
-            Save Lead
+            {status === "submitting" ? "Saving..." : "Save Lead"}
           </button>
         </div>
       </form>
     </main>
   );
 }
-
-
