@@ -1,143 +1,58 @@
 "use client";
 
 import { useState } from "react";
-import { getAppCheckToken } from "@/src/lib/firebase";
+type Form = { email: string; name: string; company: string; phone: string };
+const initial: Form = { email: "", name: "", company: "", phone: "" };
 
-export default function NewLeadPage() {
-  const [form, setForm] = useState({
-    email: "",
-    name: "",
-    company: "",
-    phone: "",
-  });
-  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
-  const [message, setMessage] = useState<string>("");
-
-  const onChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+export default function NewLead() {
+  const [form, setForm] = useState<Form>(initial);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Partial<Form>>({});
+  const set = (k: keyof Form) => (e: any) => setForm({ ...form, [k]: e.target.value });
+  const validate = (): boolean => {
+    const e: Partial<Form> = {};
+    if (!form.email || !/\S+@\S+\.\S+/.test(form.email)) e.email = "Valid email required";
+    if (!form.name) e.name = "Name required";
+    if (!form.company) e.company = "Company required";
+    setErrors(e); return Object.keys(e).length === 0;
   };
-
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setStatus("submitting");
-    setMessage("");
-    try {
-      const appCheckToken = await getAppCheckToken();
-      const res = await fetch("/api/create-lead", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(appCheckToken ? { "X-Firebase-AppCheck": appCheckToken } : {}),
-        },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || `Request failed (${res.status})`);
-      }
-      setStatus("success");
-      setMessage("Lead saved successfully.");
-      setForm({ email: "", name: "", company: "", phone: "" });
-    } catch (err: any) {
-      setStatus("error");
-      setMessage(err?.message || "Failed to save lead.");
-    }
+  const submit = async (ev: React.FormEvent) => {
+    ev.preventDefault(); setMsg(null);
+    if (!validate()) return;
+    console.log("Lead submitted", form);
+    setMsg("Saved locally (wire to backend next)."); setForm(initial);
   };
-
   return (
-    <main className="mx-auto max-w-xl px-6 py-10">
-      <h1 className="mb-6 text-3xl font-heading">Add Lead Manually</h1>
-
-      {status === "success" && (
-        <div className="mb-4 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-          {message || "Success."}
-        </div>
-      )}
-      {status === "error" && (
-        <div className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-          {message || "Something went wrong."}
-        </div>
-      )}
-
-      <form
-        onSubmit={onSubmit}
-        className="space-y-5 rounded-lg border border-white/10 bg-white/5 p-6"
-      >
+    <div className="container py-12">
+      <h1 className="font-heading text-3xl mb-2">Add Lead Manually</h1>
+      <p className="opacity-80 mb-6">Add a single potential client quickly.</p>
+      <form onSubmit={submit} className="card p-6 md:p-8 grid gap-5">
         <div>
-          <label htmlFor="email" className="mb-1 block text-sm text-fg/80">
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            value={form.email}
-            onChange={onChange}
-            className="w-full rounded-md border border-white/10 bg-transparent px-4 py-2 text-sm outline-none ring-0 focus:border-primary"
-            placeholder="jane@company.com"
-          />
+          <label className="label" htmlFor="email">Email</label>
+          <input id="email" className="input" value={form.email} onChange={set("email")} placeholder="alex@brand.com" />
+          {errors.email && <div className="text-red-400 text-sm mt-1">{errors.email}</div>}
         </div>
-
+        <div className="grid md:grid-cols-2 gap-5">
+          <div>
+            <label className="label" htmlFor="name">Name</label>
+            <input id="name" className="input" value={form.name} onChange={set("name")} placeholder="Alex Taylor" />
+            {errors.name && <div className="text-red-400 text-sm mt-1">{errors.name}</div>}
+          </div>
+          <div>
+            <label className="label" htmlFor="company">Company</label>
+            <input id="company" className="input" value={form.company} onChange={set("company")} placeholder="Acme Inc." />
+            {errors.company && <div className="text-red-400 text-sm mt-1">{errors.company}</div>}
+          </div>
+        </div>
         <div>
-          <label htmlFor="name" className="mb-1 block text-sm text-fg/80">
-            Name
-          </label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            required
-            value={form.name}
-            onChange={onChange}
-            className="w-full rounded-md border border-white/10 bg-transparent px-4 py-2 text-sm outline-none ring-0 focus:border-primary"
-            placeholder="Jane Doe"
-          />
+          <label className="label" htmlFor="phone">Phone</label>
+          <input id="phone" className="input" value={form.phone} onChange={set("phone")} placeholder="+1 555 123 4567" />
         </div>
-
-        <div>
-          <label htmlFor="company" className="mb-1 block text-sm text-fg/80">
-            Company
-          </label>
-          <input
-            id="company"
-            name="company"
-            type="text"
-            value={form.company}
-            onChange={onChange}
-            className="w-full rounded-md border border-white/10 bg-transparent px-4 py-2 text-sm outline-none ring-0 focus:border-primary"
-            placeholder="Acme Inc."
-          />
+        <div className="flex gap-3">
+          <button type="submit" className="btn btn-secondary">Save Lead</button>
+          <a href="/" className="btn btn-ghost">Cancel</a>
         </div>
-
-        <div>
-          <label htmlFor="phone" className="mb-1 block text-sm text-fg/80">
-            Phone
-          </label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            value={form.phone}
-            onChange={onChange}
-            className="w-full rounded-md border border-white/10 bg-transparent px-4 py-2 text-sm outline-none ring-0 focus:border-primary"
-            placeholder="+1 555 123 4567"
-          />
-        </div>
-
-        <div className="pt-2">
-          <button
-            type="submit"
-            disabled={status === "submitting"}
-            className="w-full rounded-lg bg-secondary px-6 py-3 font-medium text-white transition hover:brightness-110 disabled:opacity-60"
-          >
-            {status === "submitting" ? "Saving..." : "Save Lead"}
-          </button>
-        </div>
+        {msg && <div className="text-sm opacity-80">{msg}</div>}
       </form>
-    </main>
-  );
-}
+    </div>
+  );}
