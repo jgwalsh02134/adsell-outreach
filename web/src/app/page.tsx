@@ -9,7 +9,7 @@ export default function Home() {
             <div className="mt-8 flex flex-wrap gap-3">
               <a className="btn btn-primary" href="/leads/upload">Upload CSV</a>
               <a className="btn btn-secondary" href="/leads/new">Add Lead Manually</a>
-              <a className="btn btn-ghost" href="/app/dashboard">View Dashboard</a>
+              <a className="btn btn-ghost" href="/leads/dashboard">View Dashboard</a>
             </div>
             <div className="mt-5 text-sm opacity-70">CSV preview shows first 50 rows.</div>
           </div>

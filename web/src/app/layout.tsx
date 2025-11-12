@@ -12,6 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <nav className="hidden md:flex items-center gap-5 text-sm opacity-90">
             <a href="/leads/upload">Upload CSV</a>
             <a href="/leads/new">Add Lead</a>
+            <a href="/leads/dashboard">Dashboard</a>
           </nav>
         </div>
       </header>
