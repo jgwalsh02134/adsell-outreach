@@ -1,0 +1,52 @@
+[debug] [2025-11-12T14:41:01.036Z] [Firebase Plugin] Activating Firebase extension.
+[info] [Firebase Plugin] Checked firebase-tools, is up to date!
+[debug] [2025-11-12T14:41:02.602Z] [Firebase Plugin] requireAuthWrapper
+[debug] [2025-11-12T14:41:02.603Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-11-12T14:41:02.608Z] [Firebase Plugin] VSCode notification server listening on port 40001
+[error] [Firebase Plugin] requireAuth error: Could not load the default credentials. Browse to https://cloud.google.com/docs/authentication/getting-started for more information.
+[info] [Firebase Plugin] Starting Data Connect toolkit (version 2.15.0) on port 50001
+[info] i  dataconnect: downloading dataconnect-emulator-2.15.0... {"metadata":{"emulator":{"name":"dataconnect"},"message":"downloading dataconnect-emulator-2.15.0..."}}
+[debug] [2025-11-12T14:41:02.677Z] >>> [apiv2][query] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-v2.15.0 
+[debug] [2025-11-12T14:41:02.987Z] <<< [apiv2][status] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-v2.15.0 200
+[debug] [2025-11-12T14:41:02.988Z] <<< [apiv2][body] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-v2.15.0 [stream]
+[debug] [2025-11-12T14:41:05.307Z] 'fdc build' failed with error: Unkown system error when running the Data Connect toolkit. You may be able to fix this by installing Rosetta: softwareupdate --install-rosetta {"metadata":{"emulator":{"name":"dataconnect"},"message":"'fdc build' failed with error: Unkown system error when running the Data Connect toolkit. You may be able to fix this by installing Rosetta: softwareupdate --install-rosetta"}}
+[debug] [2025-11-12T14:41:05.307Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"dataconnect"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-11-12T14:41:05.307Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"dataconnect"},"message":"Ignoring unsupported arg: port"}}
+[debug] [2025-11-12T14:41:05.307Z] Starting Data Connect Emulator with command {"binary":"/Users/j-gregory-walsh/.cache/firebase/emulators/dataconnect-emulator-2.15.0","args":["--logtostderr","-v=2","dev","--listen=localhost:50001","--config_dir=/Users/j-gregory-walsh/adsell-outreach/dataconnect","--enable_output_schema_extensions=true","--enable_output_generated_sdk=true"],"optionalArgs":["listen","config_dir","enable_output_schema_extensions","enable_output_generated_sdk"],"joinArgs":true,"shell":false,"port":9399} {"metadata":{"emulator":{"name":"dataconnect"},"message":"Starting Data Connect Emulator with command {\"binary\":\"/Users/j-gregory-walsh/.cache/firebase/emulators/dataconnect-emulator-2.15.0\",\"args\":[\"--logtostderr\",\"-v=2\",\"dev\",\"--listen=localhost:50001\",\"--config_dir=/Users/j-gregory-walsh/adsell-outreach/dataconnect\",\"--enable_output_schema_extensions=true\",\"--enable_output_generated_sdk=true\"],\"optionalArgs\":[\"listen\",\"config_dir\",\"enable_output_schema_extensions\",\"enable_output_generated_sdk\"],\"joinArgs\":true,\"shell\":false,\"port\":9399}"}}
+[warn] ⚠  dataconnect: Unknown system error when starting emulator binary. You may be able to fix this by installing Rosetta: softwareupdate --install-rosetta {"metadata":{"emulator":{"name":"dataconnect"},"message":"Unknown system error when starting emulator binary. You may be able to fix this by installing Rosetta: softwareupdate --install-rosetta"}}
+[warn] ⚠  dataconnect: Fatal error occurred: 
+   Error: spawn Unknown system error -86, 
+   stopping all running emulators {"metadata":{"emulator":{"name":"dataconnect"},"message":"Fatal error occurred: \n   Error: spawn Unknown system error -86, \n   stopping all running emulators"}}
+[warn] ⚠  dataconnect: Could not spawn child process for Data Connect Emulator. {"metadata":{"emulator":{"name":"dataconnect"},"message":"Could not spawn child process for Data Connect Emulator."}}
+[info] [Firebase Plugin] Stopping Data Connect toolkit
+[debug] [2025-11-12T14:41:12.959Z] [Firebase Plugin] Activating Firebase extension.
+[info] [Firebase Plugin] Checked firebase-tools, is up to date!
+[debug] [2025-11-12T14:41:13.793Z] [Firebase Plugin] requireAuthWrapper
+[debug] [2025-11-12T14:41:13.793Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-11-12T14:41:13.798Z] [Firebase Plugin] VSCode notification server listening on port 40001
+[error] [Firebase Plugin] requireAuth error: Could not load the default credentials. Browse to https://cloud.google.com/docs/authentication/getting-started for more information.
+[info] [Firebase Plugin] Starting Data Connect toolkit (version 2.15.0) on port 50001
+[debug] [2025-11-12T14:41:13.910Z] 'fdc build' failed with error: Unkown system error when running the Data Connect toolkit. You may be able to fix this by installing Rosetta: softwareupdate --install-rosetta {"metadata":{"emulator":{"name":"dataconnect"},"message":"'fdc build' failed with error: Unkown system error when running the Data Connect toolkit. You may be able to fix this by installing Rosetta: softwareupdate --install-rosetta"}}
+[debug] [2025-11-12T14:41:13.910Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"dataconnect"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-11-12T14:41:13.910Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"dataconnect"},"message":"Ignoring unsupported arg: port"}}
+[debug] [2025-11-12T14:41:13.910Z] Starting Data Connect Emulator with command {"binary":"/Users/j-gregory-walsh/.cache/firebase/emulators/dataconnect-emulator-2.15.0","args":["--logtostderr","-v=2","dev","--listen=localhost:50001","--config_dir=/Users/j-gregory-walsh/adsell-outreach/dataconnect","--enable_output_schema_extensions=true","--enable_output_generated_sdk=true"],"optionalArgs":["listen","config_dir","enable_output_schema_extensions","enable_output_generated_sdk"],"joinArgs":true,"shell":false,"port":9399} {"metadata":{"emulator":{"name":"dataconnect"},"message":"Starting Data Connect Emulator with command {\"binary\":\"/Users/j-gregory-walsh/.cache/firebase/emulators/dataconnect-emulator-2.15.0\",\"args\":[\"--logtostderr\",\"-v=2\",\"dev\",\"--listen=localhost:50001\",\"--config_dir=/Users/j-gregory-walsh/adsell-outreach/dataconnect\",\"--enable_output_schema_extensions=true\",\"--enable_output_generated_sdk=true\"],\"optionalArgs\":[\"listen\",\"config_dir\",\"enable_output_schema_extensions\",\"enable_output_generated_sdk\"],\"joinArgs\":true,\"shell\":false,\"port\":9399}"}}
+[warn] ⚠  dataconnect: Unknown system error when starting emulator binary. You may be able to fix this by installing Rosetta: softwareupdate --install-rosetta {"metadata":{"emulator":{"name":"dataconnect"},"message":"Unknown system error when starting emulator binary. You may be able to fix this by installing Rosetta: softwareupdate --install-rosetta"}}
+[warn] ⚠  dataconnect: Fatal error occurred: 
+   Error: spawn Unknown system error -86, 
+   stopping all running emulators {"metadata":{"emulator":{"name":"dataconnect"},"message":"Fatal error occurred: \n   Error: spawn Unknown system error -86, \n   stopping all running emulators"}}
+[warn] ⚠  dataconnect: Could not spawn child process for Data Connect Emulator. {"metadata":{"emulator":{"name":"dataconnect"},"message":"Could not spawn child process for Data Connect Emulator."}}
+[debug] [2025-11-12T15:01:46.286Z] [Firebase Plugin] Received CLI notification.
+[debug] [2025-11-12T15:01:46.289Z] [Firebase Plugin] Received emulators shutdown notification.
+[debug] [2025-11-12T15:28:59.765Z] [Firebase Plugin] Received CLI notification.
+[debug] [2025-11-12T15:28:59.769Z] [Firebase Plugin] Received emulators shutdown notification.
+[debug] [2025-11-12T15:31:36.364Z] [Firebase Plugin] Received CLI notification.
+[debug] [2025-11-12T15:31:36.367Z] [Firebase Plugin] Received emulators shutdown notification.
+[debug] [2025-11-12T15:31:50.362Z] [Firebase Plugin] Received CLI notification.
+[debug] [2025-11-12T15:31:50.364Z] [Firebase Plugin] Received emulators shutdown notification.
+[debug] [2025-11-12T15:36:54.639Z] [Firebase Plugin] Received emulators started notification. Running detection.
+[debug] [2025-11-12T15:36:54.640Z] Emulator locator file path: /var/folders/tx/wmltj8kx4dnflms0l7sfx2nh0000gn/T/hub-demo-no-project.json
+[debug] [2025-11-12T15:36:54.641Z] Found emulator locator with different version: {"version":"14.24.2","origins":["http://127.0.0.1:4400","http://[::1]:4400"]}, CLI_VERSION: 14.20.0
+[debug] [2025-11-12T15:36:54.642Z] >>> [apiv2][query] GET http://127.0.0.1:4400/emulators [none]
+[debug] [2025-11-12T15:36:54.661Z] <<< [apiv2][status] GET http://127.0.0.1:4400/emulators 200
+[debug] [2025-11-12T15:36:54.661Z] <<< [apiv2][body] GET http://127.0.0.1:4400/emulators {"hub":{"listen":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"name":"hub","host":"127.0.0.1","port":4400},"ui":{"listen":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"name":"ui","host":"127.0.0.1","port":4000},"logging":{"listen":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"name":"logging","host":"127.0.0.1","port":4500},"functions":{"name":"functions","host":"127.0.0.1","port":5001},"firestore":{"listen":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"name":"firestore","host":"127.0.0.1","port":8080,"pid":99274,"reservedPorts":[9150],"webSocketHost":"127.0.0.1","webSocketPort":9150},"eventarc":{"name":"eventarc","host":"127.0.0.1","port":9299},"tasks":{"name":"tasks","host":"127.0.0.1","port":9499}}
+[debug] [2025-11-12T15:39:57.845Z] [Firebase Plugin] Received emulators shutdown notification.
