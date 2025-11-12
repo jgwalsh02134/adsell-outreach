@@ -22,7 +22,8 @@ export default function UploadCSV() {
       Papa.parse(text, {
         header: true, skipEmptyLines: true,
         complete: (r) => { const data = (r.data as Row[]).slice(0, 50); setRows(data); setHeaders(Object.keys(data[0] ?? {})); },
-        error: (err) => setError(err.message),
+        error: (err: unknown) =>
+          setError(err instanceof Error ? err.message : String(err)),
       });
     } catch (e: any) {
       setError(e?.message || "Failed to read file.");
